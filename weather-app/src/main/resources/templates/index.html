@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main class="container">
+
+    <form class="search" th:action="@{/}" method="get">
+        <div class="field grow">
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" th:value="${city}"
+                   placeholder="e.g. Dehradun" required autofocus>
+        </div>
+        <div class="field">
+            <label for="days">Forecast Days</label>
+            <select id="days" name="days">
+                <option th:each="d : ${#numbers.sequence(1, 7)}"
+                        th:value="${d}"
+                        th:text="${d} + (${d} == 1 ? ' Day' : ' Days')"
+                        th:selected="${d == days}"></option>
+            </select>
+        </div>
+        <button type="submit">Get Weather</button>
+    </form>
+
+    <!-- Error -->
+    <div class="error" th:if="${error}" th:text="${error}"></div>
+
+    <!-- Welcome / empty state -->
+    <section class="welcome" th:if="${current == null and error == null}">
+        <h1>🌦️ Weather Dashboard</h1>
+        <p>Enter a city name and select forecast days to get started!</p>
+    </section>
+
+    <!-- Current weather -->
+    <section class="current" th:if="${current != null}">
+        <div class="current-main">
+            <img th:if="${current.iconUrl != null}" th:src="${current.iconUrl}"
+                 th:alt="${current.condition}" width="96" height="96">
+            <div>
+                <h2 th:text="${current.city}">City</h2>
+                <p class="place" th:text="${current.region} + ', ' + ${current.country}">Region, Country</p>
+                <p class="muted" th:text="'Local time: ' + ${current.localTime}"></p>
+            </div>
+            <div class="temp">
+                <span th:text="${#numbers.formatDecimal(current.temperature, 1, 1)}">0</span>°C
+                <small th:text="${current.condition}">Condition</small>
+            </div>
+        </div>
+        <ul class="stats">
+            <li><span>Feels like</span>
+                <strong th:text="${#numbers.formatDecimal(current.feelsLike, 1, 1)} + '°C'"></strong></li>
+            <li><span>Humidity</span>
+                <strong th:text="${current.humidity} + '%'"></strong></li>
+            <li><span>Wind</span>
+                <strong th:text="${current.windKph} + ' km/h'"></strong></li>
+        </ul>
+    </section>
+
+    <!-- Forecast -->
+    <section class="forecast" th:if="${forecast != null and !forecast.isEmpty()}">
+        <h3 th:text="${forecast.size()} + '-Day Forecast'">Forecast</h3>
+        <div class="cards">
+            <article class="card" th:each="day : ${forecast}">
+                <h4 th:text="${#temporals.format(T(java.time.LocalDate).parse(day.date), 'EEE, dd MMM')}">Date</h4>
+                <img th:if="${day.iconUrl != null}" th:src="${day.iconUrl}" th:alt="${day.condition}"
+                     width="64" height="64">
+                <p class="cond" th:text="${day.condition}">Condition</p>
+                <p class="range">
+                    <span class="max" th:text="${#numbers.formatDecimal(day.maxTemp, 1, 1)} + '°'"></span>
+                    <span class="min" th:text="${#numbers.formatDecimal(day.minTemp, 1, 1)} + '°'"></span>
+                </p>
+                <p class="muted">Avg <span th:text="${#numbers.formatDecimal(day.avgTemp, 1, 1)} + '°C'"></span></p>
+                <p class="muted">🌧 <span th:text="${day.chanceOfRain} + '%'"></span></p>
+            </article>
+        </div>
+    </section>
+
+</main>
+</body>
+</html>
